@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyScript Runner</title>
+  <script defer src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --button-bg: #e0e0e0;
+      --output-bg: #f0f0f0;
+      --output-text: #000000;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1e1e1e;
+      --text: #d4d4d4;
+      --button-bg: #333333;
+      --output-bg: #1e1e1e;
+      --output-text: #d4d4d4;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: monospace;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    button {
+      background-color: var(--button-bg);
+      color: var(--text);
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    select {
+      margin: 10px 0;
+      padding: 5px;
+      font-size: 1em;
+    }
+
+    #output {
+      background-color: var(--output-bg);
+      color: var(--output-text);
+      padding: 10px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      border-radius: 6px;
+      min-height: 100px;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>PyScript Runner</h1>
+
+  <label for="theme">Theme:</label>
+  <select id="theme" onchange="changeTheme()">
+    <option value="light">Light</option>
+    <option value="dark" selected>Dark</option>
+  </select>
+
+  <label for="template">Template:</label>
+  <select id="template" onchange="loadTemplate()">
+    <option value="">-- Choose Template --</option>
+    <option value="example">Example Code</option>
+    <option value="math">Math Test</option>
+  </select>
+
+  <textarea id="code" placeholder="Write Python code here..."></textarea>
+  <br />
+  <button onclick="runPythonCode()">▶ Run Python</button>
+  <button onclick="saveCode()">💾 Save</button>
+  <button onclick="loadSavedCode()">📂 Load</button>
+  <div id="output">Output will appear here...</div>
+
+  <script>
+    let pyodideReady = false;
+    let pyodide;
+
+    async function loadPyodideAndPackages() {
+      pyodide = await loadPyodide();
+      pyodideReady = true;
+    }
+
+    loadPyodideAndPackages();
+
+    async function runPythonCode() {
+      if (!pyodideReady) {
+        document.getElementById("output").textContent = "Loading Pyodide...";
+        return;
+      }
+      const code = document.getElementById("code").value;
+      try {
+        let result = await pyodide.runPythonAsync(code);
+        if (typeof result !== "undefined") {
+          document.getElementById("output").textContent = result;
+        } else {
+          document.getElementById("output").textContent = "[No output]";
+        }
+      } catch (err) {
+        document.getElementById("output").textContent = `Error: ${err}`;
+      }
+    }
+
+    function loadTemplate() {
+      const template = document.getElementById("template").value;
+      let example = "";
+      if (template === "example") {
+        example = `fruits = [\"apple\", \"banana\", \"cherry\"]\nfor fruit in fruits:\n    print(f\"I love {fruit}!\")`;
+      } else if (template === "math") {
+        example = `x = 5 + 5\nx`;
+      }
+      document.getElementById("code").value = example;
+    }
+
+    function changeTheme() {
+      const theme = document.getElementById("theme").value;
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+
+    function saveCode() {
+      localStorage.setItem("savedPythonCode", document.getElementById("code").value);
+      alert("Code saved!");
+    }
+
+    function loadSavedCode() {
+      const saved = localStorage.getItem("savedPythonCode");
+      if (saved) {
+        document.getElementById("code").value = saved;
+      } else {
+        alert("No code saved.");
+      }
+    }
+  </script>
+</body>
+</html>
